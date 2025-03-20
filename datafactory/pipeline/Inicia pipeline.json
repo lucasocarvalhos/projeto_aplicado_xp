@@ -87,6 +87,10 @@
 									"p_rb_sistema": {
 										"value": "@pipeline().parameters.p_rb_sistema",
 										"type": "Expression"
+									},
+									"p_rb_sistema_tabela": {
+										"value": "@pipeline().parameters.p_rb_sistema_tabela",
+										"type": "Expression"
 									}
 								}
 							}
@@ -175,7 +179,7 @@
 			"p_rb_sistema": {
 				"type": "object"
 			},
-			"p_rb_tabela": {
+			"p_rb_sistema_tabela": {
 				"type": "object"
 			}
 		},
