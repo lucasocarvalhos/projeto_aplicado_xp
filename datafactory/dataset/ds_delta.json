@@ -1,0 +1,29 @@
+{
+	"name": "ds_delta",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_delta",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureDatabricksDeltaLakeDataset",
+		"typeProperties": {
+			"database": "default",
+			"table": "pipeline_orquestrador"
+		},
+		"schema": [
+			{
+				"name": "etapa",
+				"type": "string"
+			},
+			{
+				"name": "chave_entidade",
+				"type": "string"
+			},
+			{
+				"name": "consulta",
+				"type": "string"
+			}
+		]
+	}
+}

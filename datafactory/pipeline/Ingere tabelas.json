@@ -1,0 +1,49 @@
+{
+	"name": "Ingere tabelas",
+	"properties": {
+		"activities": [
+			{
+				"name": "FCH - Itera sobre tabelas",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.p_tabelas",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 5,
+					"activities": [
+						{
+							"name": "WEB - Get dados",
+							"type": "WebActivity",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"method": "GET",
+								"url": "https://raw.githubusercontent.com/lucasocarvalhos/projeto_aplicado_xp/refs/heads/develop/datasets/curso.csv?token=GHSAT0AAAAAADANN733M7WKHH62A7AY663IZ63NPQQ"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"p_tabelas": {
+				"type": "array"
+			}
+		},
+		"folder": {
+			"name": "1. Raw-Bronze/Sistema Logosofico"
+		},
+		"annotations": []
+	}
+}

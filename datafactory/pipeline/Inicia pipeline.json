@@ -1,0 +1,187 @@
+{
+	"name": "Inicia pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "NTB - Start Cluster",
+				"type": "DatabricksNotebook",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "Users/lucasocarvalho@outlook.com/databricks/databricks/environment/start_cluster"
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricks1",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "IFC - Raw-Bronze",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "LKP - Orquestrador",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@contains(pipeline().parameters.p_camada, 'RB')",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "FLT - Filtra RB",
+							"type": "Filter",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@activity('LKP - Orquestrador').output.value",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@equals(item().etapa, 'RB')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "PPL - Seleciona sistemas",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "FLT - Filtra RB",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Seleciona Sistemas",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"p_dados_orquestrador": {
+										"value": "@activity('FLT - Filtra RB').output",
+										"type": "Expression"
+									},
+									"p_rb_sistema": {
+										"value": "@pipeline().parameters.p_rb_sistema",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "IFC - Silver",
+				"type": "IfCondition",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "IFC - Raw-Bronze",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@contains(pipeline().parameters.p_camada, 'SV')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "IFC - Gold",
+				"type": "IfCondition",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "IFC - Silver",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@contains(pipeline().parameters.p_camada, 'GD')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "LKP - Orquestrador",
+				"description": "Lê a tabela de orquestrador do pipeline que está no catalog do Databricks.",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "NTB - Start Cluster",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureDatabricksDeltaLakeSource"
+					},
+					"dataset": {
+						"referenceName": "ds_delta",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			}
+		],
+		"parameters": {
+			"p_camada": {
+				"type": "string"
+			},
+			"p_rb_sistema": {
+				"type": "object"
+			},
+			"p_rb_tabela": {
+				"type": "object"
+			}
+		},
+		"folder": {
+			"name": "0. Main"
+		},
+		"annotations": []
+	}
+}

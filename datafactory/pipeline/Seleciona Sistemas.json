@@ -1,0 +1,78 @@
+{
+	"name": "Seleciona Sistemas",
+	"properties": {
+		"activities": [
+			{
+				"name": "IFC - Sistema Logosofico",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@contains(\n    pipeline().parameters.p_rb_sistema,\n    '[sistema_logosofico]'\n)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "FLT - Filtra Sistema Logosofico",
+							"type": "Filter",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@pipeline().parameters.p_dados_orquestrador.Value",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@contains(\n    item().chave_entidade, \n    'sistema_logosofico.'\n)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "PPL - Ingere tabelas",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "FLT - Filtra Sistema Logosofico",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Ingere tabelas",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"p_tabelas": {
+										"value": "@activity('FLT - Filtra Sistema Logosofico').output.Value",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"p_dados_orquestrador": {
+				"type": "object"
+			},
+			"p_rb_sistema": {
+				"type": "object"
+			}
+		},
+		"folder": {
+			"name": "1. Raw-Bronze/0. Sistemas"
+		},
+		"annotations": []
+	}
+}
