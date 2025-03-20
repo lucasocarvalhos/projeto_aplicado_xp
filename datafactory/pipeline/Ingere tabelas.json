@@ -5,7 +5,16 @@
 			{
 				"name": "FCH - Itera sobre tabelas",
 				"type": "ForEach",
-				"dependsOn": [],
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "FLT - Filtra tabelas",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
@@ -34,11 +43,30 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "FLT - Filtra tabelas",
+				"type": "Filter",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.p_tabelas",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@if(\n    or(\n        empty(pipeline().parameters.p_rb_sistema_tabela),\n        equals(pipeline().parameters.p_rb_sistema_tabela, '.')\n    ),\n  true,\n  contains(\n        item(), pipeline().parameters.p_rb_sistema_tabela)\n    )\n)",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"parameters": {
 			"p_tabelas": {
 				"type": "array"
+			},
+			"p_rb_sistema_tabela": {
+				"type": "object"
 			}
 		},
 		"folder": {
