@@ -22,11 +22,11 @@
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileName": {
-					"value": "@concat(\n    dataset().p_tabela,\n    '_',\n    formatDateTime(utcNow(), 'yyyyMMdd'),\n    '.parquet'\n)",
+					"value": "@concat(\n    dataset().p_tabela,\n    '_',\n    formatDateTime(addHours(utcNow(), -3), 'yyyyMMdd'),\n    '.parquet'\n)",
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@concat(\r\n    dataset().p_sistema, \r\n    '/',\r\n    formatDateTime(utcNow(), 'yyyy/MM/dd')\r\n)",
+					"value": "@concat(\n    dataset().p_sistema, \n    '/',\n    formatDateTime(addHours(utcNow(), -3), 'yyyy/MM/dd')\n)",
 					"type": "Expression"
 				},
 				"fileSystem": {

@@ -5,21 +5,26 @@
 			{
 				"name": "FCH - Itera sobre tabelas",
 				"type": "ForEach",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "FLT - Filtra tabelas",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@pipeline().parameters.p_tabelas",
+						"value": "@activity('FLT - Filtra tabelas').output.value",
 						"type": "Expression"
 					},
 					"isSequential": false,
 					"batchCount": 5,
 					"activities": [
 						{
-							"name": "WEB - Get dados",
-							"type": "WebActivity",
+							"name": "COPY - Ingere dados",
+							"type": "Copy",
 							"dependsOn": [],
 							"policy": {
 								"timeout": "0.12:00:00",
@@ -30,9 +35,65 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"method": "GET",
-								"url": "https://raw.githubusercontent.com/lucasocarvalhos/projeto_aplicado_xp/refs/heads/develop/datasets/curso.csv?token=GHSAT0AAAAAADANN733M7WKHH62A7AY663IZ63NPQQ"
-							}
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "HttpReadSettings",
+										"requestMethod": "GET",
+										"requestTimeout": ""
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_http_csv",
+									"type": "DatasetReference",
+									"parameters": {
+										"p_tabela": {
+											"value": "@concat(\n    last(\n        split(item().chave_entidade, '.')\n    ),\n    '.csv'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_adls_parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"p_sistema": {
+											"value": "@first(split(item().chave_entidade, '.'))",
+											"type": "Expression"
+										},
+										"p_container": "raw",
+										"p_tabela": {
+											"value": "@last(split(item().chave_entidade, '.'))",
+											"type": "Expression"
+										}
+									}
+								}
+							]
 						}
 					]
 				}
