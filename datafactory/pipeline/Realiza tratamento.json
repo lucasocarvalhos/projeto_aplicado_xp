@@ -23,77 +23,20 @@
 					"batchCount": 5,
 					"activities": [
 						{
-							"name": "COPY - Ingere dados",
-							"type": "Copy",
+							"name": "PPL - Executa tratamento silver",
+							"type": "ExecutePipeline",
 							"dependsOn": [],
 							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
 								"secureInput": false
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"source": {
-									"type": "DelimitedTextSource",
-									"storeSettings": {
-										"type": "HttpReadSettings",
-										"requestMethod": "GET",
-										"requestTimeout": ""
-									},
-									"formatSettings": {
-										"type": "DelimitedTextReadSettings"
-									}
+								"pipeline": {
+									"referenceName": "Tratamento Silver",
+									"type": "PipelineReference"
 								},
-								"sink": {
-									"type": "ParquetSink",
-									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings"
-									},
-									"formatSettings": {
-										"type": "ParquetWriteSettings"
-									}
-								},
-								"enableStaging": false,
-								"translator": {
-									"type": "TabularTranslator",
-									"typeConversion": true,
-									"typeConversionSettings": {
-										"allowDataTruncation": true,
-										"treatBooleanAsNumber": false
-									}
-								}
-							},
-							"inputs": [
-								{
-									"referenceName": "ds_http_csv",
-									"type": "DatasetReference",
-									"parameters": {
-										"p_tabela": {
-											"value": "@concat(\n    last(\n        split(item().chave_entidade, '.')\n    ),\n    '.csv'\n)",
-											"type": "Expression"
-										}
-									}
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "ds_adls_parquet",
-									"type": "DatasetReference",
-									"parameters": {
-										"p_sistema": {
-											"value": "@first(split(item().chave_entidade, '.'))",
-											"type": "Expression"
-										},
-										"p_container": "raw",
-										"p_tabela": {
-											"value": "@last(split(item().chave_entidade, '.'))",
-											"type": "Expression"
-										}
-									}
-								}
-							]
+								"waitOnCompletion": true
+							}
 						}
 					]
 				}
