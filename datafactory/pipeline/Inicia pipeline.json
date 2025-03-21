@@ -75,7 +75,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "Seleciona Sistemas",
+									"referenceName": "RB - Seleciona Sistemas",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
@@ -149,7 +149,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "Seleciona dominios",
+									"referenceName": "SV - Seleciona dominios",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,

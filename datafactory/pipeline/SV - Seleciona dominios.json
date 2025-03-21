@@ -1,5 +1,5 @@
 {
-	"name": "Seleciona dominios",
+	"name": "SV - Seleciona dominios",
 	"properties": {
 		"activities": [
 			{
@@ -46,7 +46,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "Realiza tratamento",
+									"referenceName": "SV - Realiza tratamento",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,

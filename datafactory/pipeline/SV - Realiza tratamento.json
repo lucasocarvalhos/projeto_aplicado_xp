@@ -1,5 +1,5 @@
 {
-	"name": "Realiza tratamento",
+	"name": "SV - Realiza tratamento",
 	"properties": {
 		"activities": [
 			{
@@ -32,7 +32,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "Tratamento Silver",
+									"referenceName": "SV - Tratamento Silver",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true

@@ -1,5 +1,5 @@
 {
-	"name": "Seleciona Sistemas",
+	"name": "RB - Seleciona Sistemas",
 	"properties": {
 		"activities": [
 			{
@@ -46,7 +46,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "Ingere tabelas",
+									"referenceName": "RB - Ingere tabelas",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
