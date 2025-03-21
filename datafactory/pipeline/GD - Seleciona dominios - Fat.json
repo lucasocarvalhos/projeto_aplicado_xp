@@ -1,5 +1,5 @@
 {
-	"name": "GD - Seleciona dominios - Dim",
+	"name": "GD - Seleciona dominios - Fat",
 	"properties": {
 		"activities": [
 			{
@@ -46,12 +46,12 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "GD - Executa dimensao",
+									"referenceName": "GD - Executa fato",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"p_dimensoes": {
+									"p_fatos": {
 										"value": "@activity('FLT - Filtra Academico').output",
 										"type": "Expression"
 									}

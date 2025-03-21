@@ -14,7 +14,7 @@
 					},
 					"ifTrueActivities": [
 						{
-							"name": "FLT - Filtra dominio",
+							"name": "FLT - Filtra dimensao",
 							"type": "Filter",
 							"dependsOn": [],
 							"userProperties": [],
@@ -24,17 +24,17 @@
 									"type": "Expression"
 								},
 								"condition": {
-									"value": "@contains(\n    item().chave_entidade, \n    'academico.'\n)",
+									"value": "@startswith(item().consulta, 'dim')",
 									"type": "Expression"
 								}
 							}
 						},
 						{
-							"name": "PPL - Ingere tabelas",
+							"name": "PPL - Executa Dim",
 							"type": "ExecutePipeline",
 							"dependsOn": [
 								{
-									"activity": "FLT - Filtra dominio",
+									"activity": "FLT - Filtra dimensao",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -46,17 +46,17 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "SV - Realiza tratamento",
+									"referenceName": "GD - Seleciona dominios - Dim",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"p_temas": {
-										"value": "@activity('FLT - Filtra Academico').output.Value",
+									"p_gd_dominio": {
+										"value": "@pipeline().parameters.p_gd_dominio",
 										"type": "Expression"
 									},
-									"p_sv_dominio_tema": {
-										"value": "@pipeline().parameters.p_sv_dominio_tema",
+									"p_dominios": {
+										"value": "@activity('FLT - Filtra dimensao').output",
 										"type": "Expression"
 									}
 								}
@@ -84,7 +84,7 @@
 					},
 					"ifTrueActivities": [
 						{
-							"name": "FLT - Filtra Academico_copy1",
+							"name": "FLT - Filtra fato",
 							"type": "Filter",
 							"dependsOn": [],
 							"userProperties": [],
@@ -94,17 +94,17 @@
 									"type": "Expression"
 								},
 								"condition": {
-									"value": "@contains(\n    item().chave_entidade, \n    'academico.'\n)",
+									"value": "@startswith(item().consulta, 'fat')",
 									"type": "Expression"
 								}
 							}
 						},
 						{
-							"name": "PPL - Ingere tabelas_copy1",
+							"name": "PPL - Executa Fat",
 							"type": "ExecutePipeline",
 							"dependsOn": [
 								{
-									"activity": "FLT - Filtra Academico_copy1",
+									"activity": "FLT - Filtra fato",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -116,17 +116,17 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "SV - Realiza tratamento",
+									"referenceName": "GD - Seleciona dominios - Fat",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"p_temas": {
-										"value": "@activity('FLT - Filtra Academico').output.Value",
+									"p_gd_dominio": {
+										"value": "@pipeline().parameters.p_gd_dominio",
 										"type": "Expression"
 									},
-									"p_sv_dominio_tema": {
-										"value": "@pipeline().parameters.p_sv_dominio_tema",
+									"p_dominios": {
+										"value": "@activity('FLT - Filtra fato').output",
 										"type": "Expression"
 									}
 								}
