@@ -35,7 +35,17 @@
 									"referenceName": "SV - Tratamento Silver",
 									"type": "PipelineReference"
 								},
-								"waitOnCompletion": true
+								"waitOnCompletion": true,
+								"parameters": {
+									"p_nome_notebook": {
+										"value": "@item().consulta",
+										"type": "Expression"
+									},
+									"p_chave_entidade": {
+										"value": "@item().chave_entidade",
+										"type": "Expression"
+									}
+								}
 							}
 						}
 					]

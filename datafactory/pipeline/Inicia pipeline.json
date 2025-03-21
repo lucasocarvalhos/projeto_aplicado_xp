@@ -233,6 +233,9 @@
 			},
 			"p_sv_dominio": {
 				"type": "object"
+			},
+			"p_sv_dominio_tema": {
+				"type": "object"
 			}
 		},
 		"folder": {

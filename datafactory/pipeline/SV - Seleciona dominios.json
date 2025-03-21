@@ -56,7 +56,7 @@
 										"type": "Expression"
 									},
 									"p_sv_dominio_tema": {
-										"value": "@pipeline().parameters.p_sv_dominio",
+										"value": "@pipeline().parameters.p_sv_dominio_tema",
 										"type": "Expression"
 									}
 								}
@@ -72,6 +72,9 @@
 			},
 			"p_sv_dominio": {
 				"type": "object"
+			},
+			"p_sv_dominio_tema": {
+				"type": "string"
 			}
 		},
 		"folder": {
