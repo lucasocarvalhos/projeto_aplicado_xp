@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"notebookPath": {
-						"value": "@concat(\n    pipeline().globalParameters.p_caminho_notebook,\n    pipeline().parameters.p_nome_notebook\n)",
+						"value": "@concat(\n    pipeline().globalParameters.p_caminho_notebook_silver,\n    pipeline().parameters.p_nome_notebook\n)",
 						"type": "Expression"
 					}
 				},
