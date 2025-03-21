@@ -2,7 +2,7 @@
 	"name": "adf-projeto-aplicado",
 	"properties": {
 		"globalParameters": {
-			"p_caminho_notebook": {
+			"p_caminho_notebook_silver": {
 				"type": "string",
 				"value": "/Workspace/Users/lucasocarvalho@outlook.com/databricks/databricks/delta/silver/academico/"
 			}
