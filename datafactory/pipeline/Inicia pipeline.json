@@ -20,7 +20,7 @@
 					"notebookPath": "Users/lucasocarvalho@outlook.com/databricks/databricks/environment/start_cluster"
 				},
 				"linkedServiceName": {
-					"referenceName": "AzureDatabricks1",
+					"referenceName": "ls_databricks",
 					"type": "LinkedServiceReference"
 				}
 			},
