@@ -101,8 +101,6 @@
 			{
 				"name": "IFC - Silver",
 				"type": "IfCondition",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "IFC - Raw-Bronze",
@@ -116,7 +114,58 @@
 					"expression": {
 						"value": "@contains(pipeline().parameters.p_camada, 'SV')",
 						"type": "Expression"
-					}
+					},
+					"ifTrueActivities": [
+						{
+							"name": "FLT - Filtra SV",
+							"type": "Filter",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@activity('LKP - Orquestrador').output.value",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@equals(item().etapa, 'SV')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "PPL - Seleciona dominio",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "FLT - Filtra SV",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Seleciona dominios",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"p_dados_orquestrador": {
+										"value": "@activity('FLT - Filtra SV').output",
+										"type": "Expression"
+									},
+									"p_sv_dominio": {
+										"value": "@pipeline().parameters.p_sv_dominio",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
 				}
 			},
 			{
@@ -180,6 +229,9 @@
 				"type": "object"
 			},
 			"p_rb_sistema_tabela": {
+				"type": "object"
+			},
+			"p_sv_dominio": {
 				"type": "object"
 			}
 		},
