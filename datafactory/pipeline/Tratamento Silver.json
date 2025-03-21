@@ -1,0 +1,30 @@
+{
+	"name": "Tratamento Silver",
+	"properties": {
+		"activities": [
+			{
+				"name": "NTB - Executa silver",
+				"type": "DatabricksNotebook",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricks1",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"folder": {
+			"name": "2. Silver/1. Executa notebook"
+		},
+		"annotations": []
+	}
+}

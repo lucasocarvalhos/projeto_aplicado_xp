@@ -1,0 +1,82 @@
+{
+	"name": "Seleciona dominios",
+	"properties": {
+		"activities": [
+			{
+				"name": "IFC - Academico",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@contains(\n    pipeline().parameters.p_sv_dominio,\n    '[academico]'\n)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "FLT - Filtra Academico",
+							"type": "Filter",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@pipeline().parameters.p_dados_orquestrador.Value",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@contains(\n    item().chave_entidade, \n    'academico.'\n)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "PPL - Ingere tabelas",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "FLT - Filtra Academico",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Realiza tratamento",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"p_temas": {
+										"value": "@activity('FLT - Filtra Academico').output.Value",
+										"type": "Expression"
+									},
+									"p_sv_dominio_tema": {
+										"value": "@pipeline().parameters.p_sv_dominio",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"p_dados_orquestrador": {
+				"type": "object"
+			},
+			"p_sv_dominio": {
+				"type": "object"
+			}
+		},
+		"folder": {
+			"name": "2. Silver/0. Dominios"
+		},
+		"annotations": []
+	}
+}
