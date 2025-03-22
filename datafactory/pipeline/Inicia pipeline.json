@@ -15,7 +15,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "Users/lucasocarvalho@outlook.com/databricks/databricks/environment/start_cluster"
+					"notebookPath": "/Users/lucasocarvalho@outlook.com/databricks/databricks/environment/start_cluster"
 				},
 				"linkedServiceName": {
 					"referenceName": "ls_databricks",
