@@ -5,8 +5,6 @@
 			{
 				"name": "NTB - Start Cluster",
 				"type": "DatabricksNotebook",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -17,7 +15,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "Users/lucasocarvalho@outlook.com/databricks/databricks/environment/start_cluster"
+					"notebookPath": "/Users/lucasocarvalho@outlook.com/databricks/databricks/environment/start_cluster"
 				},
 				"linkedServiceName": {
 					"referenceName": "ls_databricks",
