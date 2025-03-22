@@ -1,5 +1,5 @@
 {
-	"name": "Realiza tratamento",
+	"name": "SV - Realiza tratamento",
 	"properties": {
 		"activities": [
 			{
@@ -32,10 +32,20 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "Tratamento Silver",
+									"referenceName": "SV - Tratamento Silver",
 									"type": "PipelineReference"
 								},
-								"waitOnCompletion": true
+								"waitOnCompletion": true,
+								"parameters": {
+									"p_nome_notebook": {
+										"value": "@item().consulta",
+										"type": "Expression"
+									},
+									"p_chave_entidade": {
+										"value": "@item().chave_entidade",
+										"type": "Expression"
+									}
+								}
 							}
 						}
 					]

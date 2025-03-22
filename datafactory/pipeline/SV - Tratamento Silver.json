@@ -1,12 +1,10 @@
 {
-	"name": "Tratamento Silver",
+	"name": "SV - Tratamento Silver",
 	"properties": {
 		"activities": [
 			{
 				"name": "NTB - Executa silver",
 				"type": "DatabricksNotebook",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -16,12 +14,26 @@
 					"secureInput": false
 				},
 				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": {
+						"value": "@concat(\n    pipeline().globalParameters.p_caminho_notebook_silver,\n    pipeline().parameters.p_nome_notebook\n)",
+						"type": "Expression"
+					}
+				},
 				"linkedServiceName": {
-					"referenceName": "AzureDatabricks1",
+					"referenceName": "ls_databricks",
 					"type": "LinkedServiceReference"
 				}
 			}
 		],
+		"parameters": {
+			"p_nome_notebook": {
+				"type": "string"
+			},
+			"p_chave_entidade": {
+				"type": "string"
+			}
+		},
 		"folder": {
 			"name": "2. Silver/1. Executa notebook"
 		},

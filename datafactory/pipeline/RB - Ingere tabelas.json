@@ -1,5 +1,5 @@
 {
-	"name": "Ingere tabelas",
+	"name": "RB - Ingere tabelas",
 	"properties": {
 		"activities": [
 			{
@@ -94,6 +94,39 @@
 									}
 								}
 							]
+						},
+						{
+							"name": "NTB - Executa bronze",
+							"type": "DatabricksNotebook",
+							"dependsOn": [
+								{
+									"activity": "COPY - Ingere dados",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Workspace/Users/lucasocarvalho@outlook.com/databricks/databricks/delta/bronze/curinga_bronze",
+								"baseParameters": {
+									"p_arquivo": {
+										"value": "@concat(\n    first(split(item().chave_entidade, '.')),\n    '/',\n    formatDateTime(addHours(utcNow(), -3), 'yyyy/MM/dd'),\n    '/',\n    last(split(item().chave_entidade, '.')),\n    '_',\n    formatDateTime(addHours(utcNow(), -3), 'yyyyMMdd'),\n    '.parquet'\n)",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "ls_databricks",
+								"type": "LinkedServiceReference"
+							}
 						}
 					]
 				}

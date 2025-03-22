@@ -1,20 +1,20 @@
 {
-	"name": "Seleciona Sistemas",
+	"name": "SV - Seleciona dominios",
 	"properties": {
 		"activities": [
 			{
-				"name": "IFC - Sistema Logosofico",
+				"name": "IFC - Academico",
 				"type": "IfCondition",
 				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@contains(\n    pipeline().parameters.p_rb_sistema,\n    '[sistema_logosofico]'\n)",
+						"value": "@contains(\n    pipeline().parameters.p_sv_dominio,\n    '[academico]'\n)",
 						"type": "Expression"
 					},
 					"ifTrueActivities": [
 						{
-							"name": "FLT - Filtra Sistema Logosofico",
+							"name": "FLT - Filtra Academico",
 							"type": "Filter",
 							"dependsOn": [],
 							"userProperties": [],
@@ -24,7 +24,7 @@
 									"type": "Expression"
 								},
 								"condition": {
-									"value": "@contains(\n    item().chave_entidade, \n    'sistema_logosofico.'\n)",
+									"value": "@contains(\n    item().chave_entidade, \n    'academico.'\n)",
 									"type": "Expression"
 								}
 							}
@@ -34,7 +34,7 @@
 							"type": "ExecutePipeline",
 							"dependsOn": [
 								{
-									"activity": "FLT - Filtra Sistema Logosofico",
+									"activity": "FLT - Filtra Academico",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -46,17 +46,17 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "Ingere tabelas",
+									"referenceName": "SV - Realiza tratamento",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"p_tabelas": {
-										"value": "@activity('FLT - Filtra Sistema Logosofico').output.Value",
+									"p_temas": {
+										"value": "@activity('FLT - Filtra Academico').output.Value",
 										"type": "Expression"
 									},
-									"p_rb_sistema_tabela": {
-										"value": "@pipeline().parameters.p_rb_sistema_tabela",
+									"p_sv_dominio_tema": {
+										"value": "@pipeline().parameters.p_sv_dominio_tema",
 										"type": "Expression"
 									}
 								}
@@ -70,15 +70,15 @@
 			"p_dados_orquestrador": {
 				"type": "object"
 			},
-			"p_rb_sistema": {
+			"p_sv_dominio": {
 				"type": "object"
 			},
-			"p_rb_sistema_tabela": {
-				"type": "object"
+			"p_sv_dominio_tema": {
+				"type": "string"
 			}
 		},
 		"folder": {
-			"name": "1. Raw-Bronze/0. Sistemas"
+			"name": "2. Silver/0. Dominios"
 		},
 		"annotations": []
 	}

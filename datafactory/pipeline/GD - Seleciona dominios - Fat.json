@@ -1,0 +1,78 @@
+{
+	"name": "GD - Seleciona dominios - Fat",
+	"properties": {
+		"activities": [
+			{
+				"name": "IFC - Academico",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@contains(\n    pipeline().parameters.p_gd_dominio,\n    '[academico]'\n)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "FLT - Filtra Academico",
+							"type": "Filter",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@pipeline().parameters.p_dominios.Value",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@startswith(\n    item().chave_entidade, \n    'academico.'\n)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "PPL - Ingere tabelas",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "FLT - Filtra Academico",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "GD - Executa fato",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"p_fatos": {
+										"value": "@activity('FLT - Filtra Academico').output",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"p_gd_dominio": {
+				"type": "object"
+			},
+			"p_dominios": {
+				"type": "object"
+			}
+		},
+		"folder": {
+			"name": "3. Gold/1. Dominios"
+		},
+		"annotations": []
+	}
+}

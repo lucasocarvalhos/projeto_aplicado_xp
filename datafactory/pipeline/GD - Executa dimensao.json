@@ -1,0 +1,54 @@
+{
+	"name": "GD - Executa dimensao",
+	"properties": {
+		"activities": [
+			{
+				"name": "FCH - Executa Dimensoes",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.p_dimensoes.Value",
+						"type": "Expression"
+					},
+					"batchCount": 5,
+					"activities": [
+						{
+							"name": "NTB - Executa Dim",
+							"type": "DatabricksNotebook",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": {
+									"value": "@concat(\n    pipeline().globalParameters.p_caminho_notebook_gold,\n    'dimensao/',\n    item().consulta\n)",
+									"type": "Expression"
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "ls_databricks",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"p_dimensoes": {
+				"type": "object"
+			}
+		},
+		"folder": {
+			"name": "3. Gold/0. Atualiza DW"
+		},
+		"annotations": []
+	}
+}

@@ -1,0 +1,155 @@
+{
+	"name": "GD - Dim e Fat",
+	"properties": {
+		"activities": [
+			{
+				"name": "IFC - Dimensao",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@or(\n  or(\n    empty(pipeline().parameters.p_gd_dim_ou_fat),\n    equals(pipeline().parameters.p_gd_dim_ou_fat, '.')\n  ),\n  contains(\n    string(pipeline().parameters.p_gd_dim_ou_fat),\n    '[dim]'\n  )\n)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "FLT - Filtra dimensao",
+							"type": "Filter",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@pipeline().parameters.p_dados_orquestrador.Value",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@startswith(item().consulta, 'dim')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "PPL - Executa Dim",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "FLT - Filtra dimensao",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "GD - Seleciona dominios - Dim",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"p_gd_dominio": {
+										"value": "@pipeline().parameters.p_gd_dominio",
+										"type": "Expression"
+									},
+									"p_dominios": {
+										"value": "@activity('FLT - Filtra dimensao').output",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "IFC - Fato",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "IFC - Dimensao",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@or(\n  or(\n    empty(pipeline().parameters.p_gd_dim_ou_fat),\n    equals(pipeline().parameters.p_gd_dim_ou_fat, '.')\n  ),\n  contains(\n    string(pipeline().parameters.p_gd_dim_ou_fat),\n    '[fat]'\n  )\n)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "FLT - Filtra fato",
+							"type": "Filter",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@pipeline().parameters.p_dados_orquestrador.Value",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@startswith(item().consulta, 'fat')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "PPL - Executa Fat",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "FLT - Filtra fato",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "GD - Seleciona dominios - Fat",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"p_gd_dominio": {
+										"value": "@pipeline().parameters.p_gd_dominio",
+										"type": "Expression"
+									},
+									"p_dominios": {
+										"value": "@activity('FLT - Filtra fato').output",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"p_dados_orquestrador": {
+				"type": "object"
+			},
+			"p_gd_dominio": {
+				"type": "object"
+			},
+			"p_gd_dim_ou_fat": {
+				"type": "object"
+			}
+		},
+		"folder": {
+			"name": "3. Gold/0. Atualiza DW"
+		},
+		"annotations": []
+	}
+}

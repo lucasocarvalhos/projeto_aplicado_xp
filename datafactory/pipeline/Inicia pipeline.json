@@ -20,7 +20,7 @@
 					"notebookPath": "Users/lucasocarvalho@outlook.com/databricks/databricks/environment/start_cluster"
 				},
 				"linkedServiceName": {
-					"referenceName": "AzureDatabricks1",
+					"referenceName": "ls_databricks",
 					"type": "LinkedServiceReference"
 				}
 			},
@@ -75,7 +75,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "Seleciona Sistemas",
+									"referenceName": "RB - Seleciona Sistemas",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
@@ -149,7 +149,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "Seleciona dominios",
+									"referenceName": "SV - Seleciona dominios",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
@@ -161,6 +161,10 @@
 									"p_sv_dominio": {
 										"value": "@pipeline().parameters.p_sv_dominio",
 										"type": "Expression"
+									},
+									"p_sv_dominio_tema": {
+										"value": "@pipeline().parameters.p_sv_dominio_tema",
+										"type": "Expression"
 									}
 								}
 							}
@@ -171,8 +175,6 @@
 			{
 				"name": "IFC - Gold",
 				"type": "IfCondition",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "IFC - Silver",
@@ -186,7 +188,62 @@
 					"expression": {
 						"value": "@contains(pipeline().parameters.p_camada, 'GD')",
 						"type": "Expression"
-					}
+					},
+					"ifTrueActivities": [
+						{
+							"name": "FLT - Filtra GD",
+							"type": "Filter",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"items": {
+									"value": "@activity('LKP - Orquestrador').output.value",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@equals(item().etapa, 'GD')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "PPL - Seleciona Dim e Fat",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "FLT - Filtra GD",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "GD - Dim e Fat",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"p_dados_orquestrador": {
+										"value": "@activity('FLT - Filtra GD').output",
+										"type": "Expression"
+									},
+									"p_gd_dominio": {
+										"value": "@pipeline().parameters.p_gd_dominio",
+										"type": "Expression"
+									},
+									"p_gd_dim_ou_fat": {
+										"value": "@pipeline().parameters.p_gd_dim_ou_fat",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
 				}
 			},
 			{
@@ -232,6 +289,15 @@
 				"type": "object"
 			},
 			"p_sv_dominio": {
+				"type": "object"
+			},
+			"p_sv_dominio_tema": {
+				"type": "object"
+			},
+			"p_gd_dominio": {
+				"type": "object"
+			},
+			"p_gd_dim_ou_fat": {
 				"type": "object"
 			}
 		},
