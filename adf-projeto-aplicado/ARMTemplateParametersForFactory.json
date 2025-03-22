@@ -1,0 +1,33 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-projeto-aplicado"
+		},
+		"ls_adls_accountKey": {
+			"value": ""
+		},
+		"ls_databricks_accessToken": {
+			"value": ""
+		},
+		"ls_delta_accessToken": {
+			"value": ""
+		},
+		"ls_http_password": {
+			"value": ""
+		},
+		"ls_adls_properties_typeProperties_url": {
+			"value": "https://adlsprojetoaplicadoxp.dfs.core.windows.net/"
+		},
+		"ls_databricks_properties_typeProperties_existingClusterId": {
+			"value": "0313-001004-7neb0dpi"
+		},
+		"ls_http_properties_typeProperties_url": {
+			"value": "https://raw.githubusercontent.com/lucasocarvalhos/projeto_aplicado_xp/refs/heads/master/datasets/"
+		},
+		"ls_http_properties_typeProperties_userName": {
+			"value": "lucasocarvalhos"
+		}
+	}
+}

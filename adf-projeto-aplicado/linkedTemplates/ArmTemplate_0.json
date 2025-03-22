@@ -1,0 +1,1525 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-projeto-aplicado"
+		},
+		"ls_adls_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_adls'"
+		},
+		"ls_databricks_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'ls_databricks'"
+		},
+		"ls_delta_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'ls_delta'"
+		},
+		"ls_http_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_http'"
+		},
+		"ls_adls_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adlsprojetoaplicadoxp.dfs.core.windows.net/"
+		},
+		"ls_databricks_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0313-001004-7neb0dpi"
+		},
+		"ls_http_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://raw.githubusercontent.com/lucasocarvalhos/projeto_aplicado_xp/refs/heads/master/datasets/"
+		},
+		"ls_http_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "lucasocarvalhos"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_adls')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_adls_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ls_adls_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_databricks')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-4217741927282380.0.azuredatabricks.net",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('ls_databricks_accessToken')]"
+					},
+					"existingClusterId": "[parameters('ls_databricks_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_delta')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLake",
+				"typeProperties": {
+					"domain": "https://adb-4217741927282380.0.azuredatabricks.net",
+					"clusterId": "0313-001004-7neb0dpi",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('ls_delta_accessToken')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_http')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "HttpServer",
+				"typeProperties": {
+					"url": "[parameters('ls_http_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Basic",
+					"userName": "[parameters('ls_http_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('ls_http_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GD - Executa dimensao')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "FCH - Executa Dimensoes",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.p_dimensoes.Value",
+								"type": "Expression"
+							},
+							"batchCount": 5,
+							"activities": [
+								{
+									"name": "NTB - Executa Dim",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": {
+											"value": "@concat(\n    pipeline().globalParameters.p_caminho_notebook_gold,\n    'dimensao/',\n    item().consulta\n)",
+											"type": "Expression"
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_databricks",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_dimensoes": {
+						"type": "object"
+					}
+				},
+				"folder": {
+					"name": "3. Gold/0. Atualiza DW"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_databricks')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GD - Executa fato')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "FCH - Executa Fatos",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.p_fatos.Value",
+								"type": "Expression"
+							},
+							"batchCount": 5,
+							"activities": [
+								{
+									"name": "NTB - Executa Fat",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": {
+											"value": "@concat(\n    pipeline().globalParameters.p_caminho_notebook_gold,\n    'fato/',\n    item().consulta\n)",
+											"type": "Expression"
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_databricks",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_fatos": {
+						"type": "object"
+					}
+				},
+				"folder": {
+					"name": "3. Gold/0. Atualiza DW"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_databricks')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SV - Tratamento Silver')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "NTB - Executa silver",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": {
+								"value": "@concat(\n    pipeline().globalParameters.p_caminho_notebook_silver,\n    pipeline().parameters.p_nome_notebook\n)",
+								"type": "Expression"
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_databricks",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_nome_notebook": {
+						"type": "string"
+					},
+					"p_chave_entidade": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "2. Silver/1. Executa notebook"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_databricks')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_adls_parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"p_sistema": {
+						"type": "string"
+					},
+					"p_container": {
+						"type": "string"
+					},
+					"p_tabela": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@concat(\n    dataset().p_tabela,\n    '_',\n    formatDateTime(addHours(utcNow(), -3), 'yyyyMMdd'),\n    '.parquet'\n)",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat(\n    dataset().p_sistema, \n    '/',\n    formatDateTime(addHours(utcNow(), -3), 'yyyy/MM/dd')\n)",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().p_container",
+							"type": "Expression"
+						}
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_delta')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_delta",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLakeDataset",
+				"typeProperties": {
+					"database": "default",
+					"table": "pipeline_orquestrador"
+				},
+				"schema": [
+					{
+						"name": "etapa",
+						"type": "string"
+					},
+					{
+						"name": "chave_entidade",
+						"type": "string"
+					},
+					{
+						"name": "consulta",
+						"type": "string"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_delta')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_http_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_http",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"p_tabela": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation",
+						"relativeUrl": {
+							"value": "@dataset().p_tabela",
+							"type": "Expression"
+						}
+					},
+					"columnDelimiter": ";",
+					"rowDelimiter": "\n",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_http')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GD - Seleciona dominios - Dim')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "IFC - Academico",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@contains(\n    pipeline().parameters.p_gd_dominio,\n    '[academico]'\n)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "FLT - Filtra Academico",
+									"type": "Filter",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"items": {
+											"value": "@pipeline().parameters.p_dominios.Value",
+											"type": "Expression"
+										},
+										"condition": {
+											"value": "@startswith(\n    item().chave_entidade, \n    'academico.'\n)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "PPL - Ingere tabelas",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "FLT - Filtra Academico",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "GD - Executa dimensao",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_dimensoes": {
+												"value": "@activity('FLT - Filtra Academico').output",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_gd_dominio": {
+						"type": "object"
+					},
+					"p_dominios": {
+						"type": "object"
+					}
+				},
+				"folder": {
+					"name": "3. Gold/1. Dominios"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/GD - Executa dimensao')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GD - Seleciona dominios - Fat')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "IFC - Academico",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@contains(\n    pipeline().parameters.p_gd_dominio,\n    '[academico]'\n)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "FLT - Filtra Academico",
+									"type": "Filter",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"items": {
+											"value": "@pipeline().parameters.p_dominios.Value",
+											"type": "Expression"
+										},
+										"condition": {
+											"value": "@startswith(\n    item().chave_entidade, \n    'academico.'\n)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "PPL - Ingere tabelas",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "FLT - Filtra Academico",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "GD - Executa fato",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_fatos": {
+												"value": "@activity('FLT - Filtra Academico').output",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_gd_dominio": {
+						"type": "object"
+					},
+					"p_dominios": {
+						"type": "object"
+					}
+				},
+				"folder": {
+					"name": "3. Gold/1. Dominios"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/GD - Executa fato')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/RB - Ingere tabelas')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "FCH - Itera sobre tabelas",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "FLT - Filtra tabelas",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('FLT - Filtra tabelas').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 5,
+							"activities": [
+								{
+									"name": "COPY - Ingere dados",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "HttpReadSettings",
+												"requestMethod": "GET",
+												"requestTimeout": ""
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "ds_http_csv",
+											"type": "DatasetReference",
+											"parameters": {
+												"p_tabela": {
+													"value": "@concat(\n    last(\n        split(item().chave_entidade, '.')\n    ),\n    '.csv'\n)",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "ds_adls_parquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"p_sistema": {
+													"value": "@first(split(item().chave_entidade, '.'))",
+													"type": "Expression"
+												},
+												"p_container": "raw",
+												"p_tabela": {
+													"value": "@last(split(item().chave_entidade, '.'))",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "NTB - Executa bronze",
+									"type": "DatabricksNotebook",
+									"dependsOn": [
+										{
+											"activity": "COPY - Ingere dados",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/Workspace/Users/lucasocarvalho@outlook.com/databricks/databricks/delta/bronze/curinga_bronze",
+										"baseParameters": {
+											"p_arquivo": {
+												"value": "@concat(\n    first(split(item().chave_entidade, '.')),\n    '/',\n    formatDateTime(addHours(utcNow(), -3), 'yyyy/MM/dd'),\n    '/',\n    last(split(item().chave_entidade, '.')),\n    '_',\n    formatDateTime(addHours(utcNow(), -3), 'yyyyMMdd'),\n    '.parquet'\n)",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_databricks",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "FLT - Filtra tabelas",
+						"type": "Filter",
+						"state": "Active",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.p_tabelas",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@or(\n  or(\n    empty(pipeline().parameters.p_rb_sistema_tabela),\n    equals(pipeline().parameters.p_rb_sistema_tabela, '.')\n  ),\n  contains(\n    string(pipeline().parameters.p_rb_sistema_tabela),\n    item().chave_entidade\n  )\n)\n",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_tabelas": {
+						"type": "array"
+					},
+					"p_rb_sistema_tabela": {
+						"type": "object"
+					}
+				},
+				"folder": {
+					"name": "1. Raw-Bronze/Sistema Logosofico"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_http_csv')]",
+				"[concat(variables('factoryId'), '/datasets/ds_adls_parquet')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_databricks')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SV - Realiza tratamento')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "FCH - Itera sobre tabelas",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "FLT - Filtra tabelas",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('FLT - Filtra tabelas').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 5,
+							"activities": [
+								{
+									"name": "PPL - Executa tratamento silver",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "SV - Tratamento Silver",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_nome_notebook": {
+												"value": "@item().consulta",
+												"type": "Expression"
+											},
+											"p_chave_entidade": {
+												"value": "@item().chave_entidade",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "FLT - Filtra tabelas",
+						"type": "Filter",
+						"state": "Active",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.p_temas",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@or(\n  or(\n    empty(pipeline().parameters.p_sv_dominio_tema),\n    equals(pipeline().parameters.p_sv_dominio_tema, '.')\n  ),\n  contains(\n    string(pipeline().parameters.p_sv_dominio_tema),\n    item().chave_entidade\n  )\n)\n",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_temas": {
+						"type": "array"
+					},
+					"p_sv_dominio_tema": {
+						"type": "object"
+					}
+				},
+				"folder": {
+					"name": "2. Silver/Academico"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/SV - Tratamento Silver')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GD - Dim e Fat')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "IFC - Dimensao",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@or(\n  or(\n    empty(pipeline().parameters.p_gd_dim_ou_fat),\n    equals(pipeline().parameters.p_gd_dim_ou_fat, '.')\n  ),\n  contains(\n    string(pipeline().parameters.p_gd_dim_ou_fat),\n    '[dim]'\n  )\n)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "FLT - Filtra dimensao",
+									"type": "Filter",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"items": {
+											"value": "@pipeline().parameters.p_dados_orquestrador.Value",
+											"type": "Expression"
+										},
+										"condition": {
+											"value": "@startswith(item().consulta, 'dim')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "PPL - Executa Dim",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "FLT - Filtra dimensao",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "GD - Seleciona dominios - Dim",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_gd_dominio": {
+												"value": "@pipeline().parameters.p_gd_dominio",
+												"type": "Expression"
+											},
+											"p_dominios": {
+												"value": "@activity('FLT - Filtra dimensao').output",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "IFC - Fato",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "IFC - Dimensao",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@or(\n  or(\n    empty(pipeline().parameters.p_gd_dim_ou_fat),\n    equals(pipeline().parameters.p_gd_dim_ou_fat, '.')\n  ),\n  contains(\n    string(pipeline().parameters.p_gd_dim_ou_fat),\n    '[fat]'\n  )\n)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "FLT - Filtra fato",
+									"type": "Filter",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"items": {
+											"value": "@pipeline().parameters.p_dados_orquestrador.Value",
+											"type": "Expression"
+										},
+										"condition": {
+											"value": "@startswith(item().consulta, 'fat')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "PPL - Executa Fat",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "FLT - Filtra fato",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "GD - Seleciona dominios - Fat",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_gd_dominio": {
+												"value": "@pipeline().parameters.p_gd_dominio",
+												"type": "Expression"
+											},
+											"p_dominios": {
+												"value": "@activity('FLT - Filtra fato').output",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_dados_orquestrador": {
+						"type": "object"
+					},
+					"p_gd_dominio": {
+						"type": "object"
+					},
+					"p_gd_dim_ou_fat": {
+						"type": "object"
+					}
+				},
+				"folder": {
+					"name": "3. Gold/0. Atualiza DW"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/GD - Seleciona dominios - Dim')]",
+				"[concat(variables('factoryId'), '/pipelines/GD - Seleciona dominios - Fat')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/RB - Seleciona Sistemas')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "IFC - Sistema Logosofico",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@contains(\n    pipeline().parameters.p_rb_sistema,\n    '[sistema_logosofico]'\n)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "FLT - Filtra Sistema Logosofico",
+									"type": "Filter",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"items": {
+											"value": "@pipeline().parameters.p_dados_orquestrador.Value",
+											"type": "Expression"
+										},
+										"condition": {
+											"value": "@contains(\n    item().chave_entidade, \n    'sistema_logosofico.'\n)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "PPL - Ingere tabelas",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "FLT - Filtra Sistema Logosofico",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "RB - Ingere tabelas",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_tabelas": {
+												"value": "@activity('FLT - Filtra Sistema Logosofico').output.Value",
+												"type": "Expression"
+											},
+											"p_rb_sistema_tabela": {
+												"value": "@pipeline().parameters.p_rb_sistema_tabela",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_dados_orquestrador": {
+						"type": "object"
+					},
+					"p_rb_sistema": {
+						"type": "object"
+					},
+					"p_rb_sistema_tabela": {
+						"type": "object"
+					}
+				},
+				"folder": {
+					"name": "1. Raw-Bronze/0. Sistemas"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/RB - Ingere tabelas')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SV - Seleciona dominios')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "IFC - Academico",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@contains(\n    pipeline().parameters.p_sv_dominio,\n    '[academico]'\n)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "FLT - Filtra Academico",
+									"type": "Filter",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"items": {
+											"value": "@pipeline().parameters.p_dados_orquestrador.Value",
+											"type": "Expression"
+										},
+										"condition": {
+											"value": "@contains(\n    item().chave_entidade, \n    'academico.'\n)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "PPL - Ingere tabelas",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "FLT - Filtra Academico",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "SV - Realiza tratamento",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_temas": {
+												"value": "@activity('FLT - Filtra Academico').output.Value",
+												"type": "Expression"
+											},
+											"p_sv_dominio_tema": {
+												"value": "@pipeline().parameters.p_sv_dominio_tema",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_dados_orquestrador": {
+						"type": "object"
+					},
+					"p_sv_dominio": {
+						"type": "object"
+					},
+					"p_sv_dominio_tema": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "2. Silver/0. Dominios"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/SV - Realiza tratamento')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Inicia pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "NTB - Start Cluster",
+						"type": "DatabricksNotebook",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "Users/lucasocarvalho@outlook.com/databricks/databricks/environment/start_cluster"
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_databricks",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "IFC - Raw-Bronze",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "LKP - Orquestrador",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@contains(pipeline().parameters.p_camada, 'RB')",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "FLT - Filtra RB",
+									"type": "Filter",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"items": {
+											"value": "@activity('LKP - Orquestrador').output.value",
+											"type": "Expression"
+										},
+										"condition": {
+											"value": "@equals(item().etapa, 'RB')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "PPL - Seleciona sistemas",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "FLT - Filtra RB",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "RB - Seleciona Sistemas",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_dados_orquestrador": {
+												"value": "@activity('FLT - Filtra RB').output",
+												"type": "Expression"
+											},
+											"p_rb_sistema": {
+												"value": "@pipeline().parameters.p_rb_sistema",
+												"type": "Expression"
+											},
+											"p_rb_sistema_tabela": {
+												"value": "@pipeline().parameters.p_rb_sistema_tabela",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "IFC - Silver",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "IFC - Raw-Bronze",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@contains(pipeline().parameters.p_camada, 'SV')",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "FLT - Filtra SV",
+									"type": "Filter",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"items": {
+											"value": "@activity('LKP - Orquestrador').output.value",
+											"type": "Expression"
+										},
+										"condition": {
+											"value": "@equals(item().etapa, 'SV')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "PPL - Seleciona dominio",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "FLT - Filtra SV",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "SV - Seleciona dominios",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_dados_orquestrador": {
+												"value": "@activity('FLT - Filtra SV').output",
+												"type": "Expression"
+											},
+											"p_sv_dominio": {
+												"value": "@pipeline().parameters.p_sv_dominio",
+												"type": "Expression"
+											},
+											"p_sv_dominio_tema": {
+												"value": "@pipeline().parameters.p_sv_dominio_tema",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "IFC - Gold",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "IFC - Silver",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@contains(pipeline().parameters.p_camada, 'GD')",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "FLT - Filtra GD",
+									"type": "Filter",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"items": {
+											"value": "@activity('LKP - Orquestrador').output.value",
+											"type": "Expression"
+										},
+										"condition": {
+											"value": "@equals(item().etapa, 'GD')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "PPL - Seleciona Dim e Fat",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "FLT - Filtra GD",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "GD - Dim e Fat",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"p_dados_orquestrador": {
+												"value": "@activity('FLT - Filtra GD').output",
+												"type": "Expression"
+											},
+											"p_gd_dominio": {
+												"value": "@pipeline().parameters.p_gd_dominio",
+												"type": "Expression"
+											},
+											"p_gd_dim_ou_fat": {
+												"value": "@pipeline().parameters.p_gd_dim_ou_fat",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "LKP - Orquestrador",
+						"description": "Lê a tabela de orquestrador do pipeline que está no catalog do Databricks.",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "NTB - Start Cluster",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureDatabricksDeltaLakeSource"
+							},
+							"dataset": {
+								"referenceName": "ds_delta",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"p_camada": {
+						"type": "string"
+					},
+					"p_rb_sistema": {
+						"type": "object"
+					},
+					"p_rb_sistema_tabela": {
+						"type": "object"
+					},
+					"p_sv_dominio": {
+						"type": "object"
+					},
+					"p_sv_dominio_tema": {
+						"type": "object"
+					},
+					"p_gd_dominio": {
+						"type": "object"
+					},
+					"p_gd_dim_ou_fat": {
+						"type": "object"
+					}
+				},
+				"folder": {
+					"name": "0. Main"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_databricks')]",
+				"[concat(variables('factoryId'), '/datasets/ds_delta')]",
+				"[concat(variables('factoryId'), '/pipelines/RB - Seleciona Sistemas')]",
+				"[concat(variables('factoryId'), '/pipelines/SV - Seleciona dominios')]",
+				"[concat(variables('factoryId'), '/pipelines/GD - Dim e Fat')]"
+			]
+		}
+	]
+}
