@@ -1,0 +1,20 @@
+{
+	"name": "academico_FAT_MATRICULAS",
+	"properties": {
+		"folder": {
+			"name": "academico"
+		},
+		"content": {
+			"query": "USE [academico]\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'SynapseParquetFormat') \n\tCREATE EXTERNAL FILE FORMAT [SynapseParquetFormat] \n\tWITH ( FORMAT_TYPE = PARQUET)\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'delta_adlsprojetoaplicadoxp_dfs_core_windows_net') \n\tCREATE EXTERNAL DATA SOURCE [delta_adlsprojetoaplicadoxp_dfs_core_windows_net] \n\tWITH (\n\t\tLOCATION = 'abfss://delta@adlsprojetoaplicadoxp.dfs.core.windows.net' \n\t)\nGO\n\nCREATE EXTERNAL TABLE fato.fat_matriculas (\n\t[id_matricula] nvarchar(2000),\n\t[id_aluno] nvarchar(2000),\n\t[id_curso] nvarchar(2000),\n\t[id_turma] nvarchar(2000),\n\t[id_data_matricula] nvarchar(2000)\n\t)\n\tWITH (\n\tLOCATION = 'gold/academico/fato/fato_matriculas/**',\n\tDATA_SOURCE = [delta_adlsprojetoaplicadoxp_dfs_core_windows_net],\n\tFILE_FORMAT = [SynapseParquetFormat]\n\t)\nGO\n\n\nSELECT TOP 100 * FROM fato.fat_matriculas\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "academico",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
