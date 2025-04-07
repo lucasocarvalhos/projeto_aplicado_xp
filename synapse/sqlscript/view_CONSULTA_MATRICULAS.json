@@ -1,0 +1,20 @@
+{
+	"name": "view_CONSULTA_MATRICULAS",
+	"properties": {
+		"folder": {
+			"name": "academico/Views"
+		},
+		"content": {
+			"query": "USE [academico]\nGO\n\nDROP VIEW IF EXISTS consulta_matricula\nGO\n\nCREATE VIEW consulta_matricula AS ( \nSELECT DISTINCT\n\n      matricula.id_matricula AS NUM_MATRICULA\n    , aluno.nome AS NOME_ALUNO\n    , aluno.cpf AS NUM_CPF\n    , aluno.email AS CONTATO_EMAIL\n    , aluno.telefone AS CONTATO_TELEFONE\n    , aluno.endereco AS NOME_ENDERECO \n    , aluno.idade AS NUM_IDADE\n    , aluno.data_nascimento AS DAT_NASCIMENTO\n    , curso.nome_curso AS NOME_CURSO\n    , curso.modalidade AS MODALIDADE_CURSO\n    , turma.semestre AS SEMESTRE_CURSO\n    , turma.turno AS TURNO_CURSO\n\nFROM fato.fat_matriculas matricula\n\nJOIN dimensao.dim_aluno aluno\n    ON matricula.id_aluno = aluno.id_aluno\n\nJOIN dimensao.dim_curso curso\n    ON matricula.id_curso = curso.id_curso \n\nJOIN dimensao.dim_turma turma \n    ON matricula.id_turma = turma.id_turma\n)",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "academico",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
