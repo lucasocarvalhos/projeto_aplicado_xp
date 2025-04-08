@@ -1,0 +1,20 @@
+{
+	"name": "configs_CREATE_LOGIN",
+	"properties": {
+		"folder": {
+			"name": "configs"
+		},
+		"content": {
+			"query": "CREATE LOGIN api_consulta WITH PASSWORD = 'D@dos2025!';\n\nCREATE USER api_consulta FOR LOGIN api_consulta;\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "academico",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
