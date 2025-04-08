@@ -1,0 +1,20 @@
+{
+	"name": "configs_GRANT_SELECT",
+	"properties": {
+		"folder": {
+			"name": "configs"
+		},
+		"content": {
+			"query": "GRANT SELECT ON OBJECT::[academico].[dbo].[consulta_matricula] TO api_consulta;\n\nGRANT SELECT ON OBJECT::[fato].[fat_matriculas] TO api_consulta;\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "academico",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
