@@ -5,7 +5,7 @@
 			"name": "configs"
 		},
 		"content": {
-			"query": "CREATE USER [func-projeto-aplicado] FROM EXTERNAL PROVIDER;\n\nGRANT SELECT ON OBJECT::academico.dbo.consulta_matricula TO [func-projeto-aplicado];\n",
+			"query": "CREATE USER [consulta-matricula] FROM EXTERNAL PROVIDER;\n\nGRANT SELECT ON OBJECT::academico.dbo.consulta_matricula TO [consulta-matricula];\n\n\n",
 			"metadata": {
 				"language": "sql"
 			},
