@@ -1,0 +1,20 @@
+{
+	"name": "configs_CREATE_USER_EXTERNAL_PROVIDER",
+	"properties": {
+		"folder": {
+			"name": "configs"
+		},
+		"content": {
+			"query": "CREATE USER [consulta-matricula] FROM EXTERNAL PROVIDER;\n\nGRANT SELECT ON OBJECT::academico.dbo.consulta_matricula TO [consulta-matricula];\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "academico",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
