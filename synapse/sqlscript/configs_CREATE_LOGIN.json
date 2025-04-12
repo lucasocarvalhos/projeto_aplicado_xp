@@ -5,7 +5,7 @@
 			"name": "configs"
 		},
 		"content": {
-			"query": "CREATE LOGIN api_consulta WITH PASSWORD = 'D@dos2025!';\n\nCREATE USER api_consulta FOR LOGIN api_consulta;\n",
+			"query": "CREATE LOGIN api_consulta WITH PASSWORD = '';\n\nCREATE USER api_consulta FOR LOGIN api_consulta;\n",
 			"metadata": {
 				"language": "sql"
 			},
