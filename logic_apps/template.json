@@ -1,0 +1,115 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_consulta_matricula_name": {
+            "defaultValue": "consulta-matricula",
+            "type": "String"
+        },
+        "connections_sql_2_externalid": {
+            "defaultValue": "/subscriptions/5569887f-9bf9-4300-a6df-9e8a266610c0/resourceGroups/projeto-aplicado-xp/providers/Microsoft.Web/connections/sql-2",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_consulta_matricula_name')]",
+            "location": "eastus2",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "When_a_HTTP_request_is_received": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "method": "GET"
+                            },
+                            "description": "Create a callable REST endpoint URL for this workflow and wait to receive a request over HTTP or HTTPS, which triggers the workflow."
+                        }
+                    },
+                    "actions": {
+                        "Response": {
+                            "runAfter": {
+                                "Execute_a_SQL_query_(V2)": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "statusCode": 200,
+                                "body": "@body('Execute_a_SQL_query_(V2)')['ResultSets']['Table1']"
+                            },
+                            "description": "Return a response to the caller. The Body and Headers parameters are optional."
+                        },
+                        "Execute_a_SQL_query_(V2)": {
+                            "runAfter": {
+                                "Initialize_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['sql']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "body": {
+                                    "query": "SELECT * FROM dbo.consulta_matricula WHERE NUM_MATRICULA = @{variables('matricula')};"
+                                },
+                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('sy-projetoaplicadoxp-ondemand.sql.azuresynapse.net'))},@{encodeURIComponent(encodeURIComponent('academico'))}/query/sql"
+                            }
+                        },
+                        "Initialize_variable": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "matricula",
+                                        "type": "string",
+                                        "value": "@{triggerOutputs()?['queries']['matricula']}\n"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "sql": {
+                                "id": "/subscriptions/5569887f-9bf9-4300-a6df-9e8a266610c0/providers/Microsoft.Web/locations/eastus2/managedApis/sql",
+                                "connectionId": "[parameters('connections_sql_2_externalid')]",
+                                "connectionName": "sql-2",
+                                "connectionProperties": {
+                                    "authentication": {
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
